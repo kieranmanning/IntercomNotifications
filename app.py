@@ -2,10 +2,10 @@
 
 import aws_cdk as cdk
 
-from lambda_cdk.lambda_cdk_stack import LambdaCdkStack
+from cdk.notifications_stack import NotificationsStack
 
 
 app = cdk.App()
-LambdaCdkStack(app, "LambdaCdkStack")
+NotificationsStack(app, "LambdaCdkStack")
 
 app.synth()

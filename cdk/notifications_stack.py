@@ -12,7 +12,7 @@ from aws_cdk import (
 )
 
 
-class LambdaCdkStack(Stack):
+class NotificationsStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
@@ -69,7 +69,7 @@ class LambdaCdkStack(Stack):
         sqs_lambda = aws_lambda.Function(
             self,
             "SQSLambda",
-            handler="lambda_handler.handler",
+            handler="notification_handler.handler",
             runtime=aws_lambda.Runtime.PYTHON_3_10,
             code=aws_lambda.Code.from_asset("lambda_handlers"),
         )
