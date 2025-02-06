@@ -79,6 +79,26 @@ class NotificationsStack(Stack):
 
         sqs_lambda.add_event_source(sqs_event_source)
 
+        notification_table = dynamodb.Table(
+            self,
+            "NotificationsTable",
+            partition_key=dynamodb.Attribute(
+                name="id",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="timestamp",
+                type=dynamodb.AttributeType.STRING
+            ),
+            table_name="NoticationsTable"
+        )
+        sqs_lambda.add_environment("TABLE_NAME", notification_table.table_name)
+        notification_table.grant_write_data(sqs_lambda)
+
+        #######################################################################
+        # Authorization code from here on
+        #######################################################################
+
         authorizer_lambda = aws_lambda.Function(
             self,
             "Auth0AuthorizerLambda",
@@ -102,18 +122,4 @@ class NotificationsStack(Stack):
             "POST",
             authorizer=api_gateway_authorizer,
             authorization_type=apigateway.AuthorizationType.CUSTOM,
-        )
-
-        dynamodb_table = dynamodb.Table(
-            self,
-            "NotificationsTable",
-            partition_key=dynamodb.Attribute(
-                name="id",
-                type=dynamodb.AttributeType.STRING
-            ),
-            sort_key=dynamodb.Attribute(
-                name="timestamp",
-                type=dynamodb.AttributeType.STRING
-            ),
-            table_name="NoticationsTable"
         )

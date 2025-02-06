@@ -1,7 +1,7 @@
 def handler(event, context):
     # token = event["authorizationToken"]
     print(event)
-    response = generatePolicy("user", "Allow", event["methodArn"])
+    response = generatePolicy("user", "Deny", event["methodArn"])
     return response
     # if token == "allow":
     #     print("authorized")
