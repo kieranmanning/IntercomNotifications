@@ -6,7 +6,7 @@ from aws_cdk import (
     aws_sqs as sqs,
     aws_lambda,
     aws_lambda_event_sources as lambda_event_sources,
-    # aws_dynamodb as dynamodb,
+    aws_dynamodb as dynamodb,
     aws_apigateway as apigateway,
     Aws as AWS,
 )
@@ -23,7 +23,6 @@ class NotificationsStack(Stack):
             visibility_timeout=Duration.seconds(300),
         )
 
-        #
         api_gateway_role = iam.Role(
             self,
             "RestAPIRole",
@@ -71,7 +70,7 @@ class NotificationsStack(Stack):
             "SQSLambda",
             handler="notification_handler.handler",
             runtime=aws_lambda.Runtime.PYTHON_3_10,
-            code=aws_lambda.Code.from_asset("lambda_handlers"),
+            code=aws_lambda.Code.from_asset("./cdk/lambda"),
         )
 
         sqs_event_source = lambda_event_sources.SqsEventSource(
@@ -85,7 +84,7 @@ class NotificationsStack(Stack):
             "Auth0AuthorizerLambda",
             handler="authorizer_handler.handler",
             runtime=aws_lambda.Runtime.PYTHON_3_10,
-            code=aws_lambda.Code.from_asset("lambda_handlers"),
+            code=aws_lambda.Code.from_asset("./cdk/lambda"),
         )
 
         api_gateway_authorizer = apigateway.TokenAuthorizer(
@@ -105,16 +104,16 @@ class NotificationsStack(Stack):
             authorization_type=apigateway.AuthorizationType.CUSTOM,
         )
 
-        # dynamodb_table = dynamodb.Table(
-        #     self,
-        #     "NotificationsTable",
-        #     partition_key=dynamodb.Attribute(
-        #         name="id",
-        #         type=dynamodb.AttributeType.STRING
-        #     ),
-        #     sort_key=dynamodb.Attribute(
-        #         name="timestamp",
-        #         type=dynamodb.AttributeType.STRING
-        #     ),
-        #     table_name="NoticationsTable"
-        # )
+        dynamodb_table = dynamodb.Table(
+            self,
+            "NotificationsTable",
+            partition_key=dynamodb.Attribute(
+                name="id",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="timestamp",
+                type=dynamodb.AttributeType.STRING
+            ),
+            table_name="NoticationsTable"
+        )
