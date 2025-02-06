@@ -33,7 +33,11 @@ class LambdaCdkStack(Stack):
         api_gateway_base = apigateway.RestApi(self, "ApiGateway")
         api_notifications_resource = api_gateway_base.root.add_resource('notifications')
 
-        #
+        sqs_integration_response = apigateway.IntegrationResponse(
+            status_code="200",
+            response_templates={"application/json": ""},
+        )
+
         api_sqs_integration_options = apigateway.IntegrationOptions(
             credentials_role=api_gateway_role,
             request_templates={
@@ -43,6 +47,7 @@ class LambdaCdkStack(Stack):
             request_parameters={
                 "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
             },
+            integration_responses=[sqs_integration_response]
         )
 
         api_notifications_sqs_integation = apigateway.AwsIntegration(
@@ -69,19 +74,12 @@ class LambdaCdkStack(Stack):
             code=aws_lambda.Code.from_asset("lambda_handlers"),
         )
 
-        dynamodb_table = dynamodb.Table(
-            self, 
-            "NotificationsTable",
-            partition_key=dynamodb.Attribute(
-                name="id",
-                type=dynamodb.AttributeType.STRING
-            ),
-            sort_key=dynamodb.Attribute(
-                name="timestamp",
-                type=dynamodb.AttributeType.STRING
-            ),
-            table_name="NoticationsTable"
+        sqs_event_source = lambda_event_sources.SqsEventSource(
+            incoming_notification_queue
         )
+
+        sqs_lambda.add_event_source(sqs_event_source)
+
 
         authorizer_lambda = aws_lambda.Function(
             self,
@@ -90,12 +88,6 @@ class LambdaCdkStack(Stack):
             runtime=aws_lambda.Runtime.PYTHON_3_10,
             code=aws_lambda.Code.from_asset("lambda_handlers"),
         )
-
-        sqs_event_source = lambda_event_sources.SqsEventSource(
-            incoming_notification_queue
-        )
-
-        sqs_lambda.add_event_source(sqs_event_source)
 
         api_gateway_authorizer = apigateway.TokenAuthorizer(
             self, 
@@ -112,4 +104,18 @@ class LambdaCdkStack(Stack):
             "POST", 
             authorizer=api_gateway_authorizer,
             authorization_type=apigateway.AuthorizationType.CUSTOM
+        )
+
+        dynamodb_table = dynamodb.Table(
+            self, 
+            "NotificationsTable",
+            partition_key=dynamodb.Attribute(
+                name="id",
+                type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="timestamp",
+                type=dynamodb.AttributeType.STRING
+            ),
+            table_name="NoticationsTable"
         )
