@@ -6,9 +6,9 @@ from aws_cdk import (
     aws_sqs as sqs,
     aws_lambda,
     aws_lambda_event_sources as lambda_event_sources,
-    aws_dynamodb as dynamodb,
+    # aws_dynamodb as dynamodb,
     aws_apigateway as apigateway,
-    Aws as AWS
+    Aws as AWS,
 )
 
 
@@ -23,15 +23,17 @@ class LambdaCdkStack(Stack):
             visibility_timeout=Duration.seconds(300),
         )
 
-        # 
+        #
         api_gateway_role = iam.Role(
             self,
             "RestAPIRole",
             assumed_by=iam.ServicePrincipal("apigateway.amazonaws.com"),
-            managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSQSFullAccess")]
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSQSFullAccess")
+            ],
         )
         api_gateway_base = apigateway.RestApi(self, "ApiGateway")
-        api_notifications_resource = api_gateway_base.root.add_resource('notifications')
+        api_notifications_resource = api_gateway_base.root.add_resource("notifications")
 
         sqs_integration_response = apigateway.IntegrationResponse(
             status_code="200",
@@ -47,23 +49,21 @@ class LambdaCdkStack(Stack):
             request_parameters={
                 "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
             },
-            integration_responses=[sqs_integration_response]
+            integration_responses=[sqs_integration_response],
         )
 
         api_notifications_sqs_integation = apigateway.AwsIntegration(
             service="sqs",
             integration_http_method="POST",
             path="{}/{}".format(AWS.ACCOUNT_ID, incoming_notification_queue.queue_name),
-            options=api_sqs_integration_options
+            options=api_sqs_integration_options,
         )
 
         method_response = apigateway.MethodResponse(status_code="200")
 
-        #Add the API GW Integration to the "example" API GW Resource
+        # Add the API GW Integration to the "example" API GW Resource
         api_notifications_resource.add_method(
-            "POST",
-            api_notifications_sqs_integation,
-            method_responses=[method_response]
+            "POST", api_notifications_sqs_integation, method_responses=[method_response]
         )
 
         sqs_lambda = aws_lambda.Function(
@@ -80,7 +80,6 @@ class LambdaCdkStack(Stack):
 
         sqs_lambda.add_event_source(sqs_event_source)
 
-
         authorizer_lambda = aws_lambda.Function(
             self,
             "Auth0AuthorizerLambda",
@@ -90,8 +89,8 @@ class LambdaCdkStack(Stack):
         )
 
         api_gateway_authorizer = apigateway.TokenAuthorizer(
-            self, 
-            "Auth0ApiGatewayAuthorizer", 
+            self,
+            "Auth0ApiGatewayAuthorizer",
             handler=authorizer_lambda,
         )
 
@@ -101,21 +100,21 @@ class LambdaCdkStack(Stack):
 
         hello_resource = api_gateway.root.add_resource("hello")
         hello_resource.add_method(
-            "POST", 
+            "POST",
             authorizer=api_gateway_authorizer,
-            authorization_type=apigateway.AuthorizationType.CUSTOM
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
         )
 
-        dynamodb_table = dynamodb.Table(
-            self, 
-            "NotificationsTable",
-            partition_key=dynamodb.Attribute(
-                name="id",
-                type=dynamodb.AttributeType.STRING
-            ),
-            sort_key=dynamodb.Attribute(
-                name="timestamp",
-                type=dynamodb.AttributeType.STRING
-            ),
-            table_name="NoticationsTable"
-        )
+        # dynamodb_table = dynamodb.Table(
+        #     self,
+        #     "NotificationsTable",
+        #     partition_key=dynamodb.Attribute(
+        #         name="id",
+        #         type=dynamodb.AttributeType.STRING
+        #     ),
+        #     sort_key=dynamodb.Attribute(
+        #         name="timestamp",
+        #         type=dynamodb.AttributeType.STRING
+        #     ),
+        #     table_name="NoticationsTable"
+        # )
