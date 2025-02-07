@@ -22,6 +22,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: venv-${{ hashFiles('requirements.txt') }}
+          path: .venv
 
       - name: install deps
         run: |
