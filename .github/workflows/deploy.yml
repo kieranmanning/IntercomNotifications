@@ -13,6 +13,27 @@ jobs:
       - name: Git clone the repository
         uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        id: setup_python
+          with: python-version: '3.13'
+
+      - name: restore cached venv
+        uses: actions/cache/restore@v4
+        with:
+          key: venv-${{ hashFiles('requirements.txt') }}
+
+      - name: install deps
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+      
+      - name: cache venv
+        uses: actions/cache/save@v4
+        with: 
+          key: venv-${{ hashFiles('requirements.txt') }}
+          path: .venv
+
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4.0.3
         with:
