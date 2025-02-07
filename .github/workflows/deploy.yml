@@ -36,8 +36,17 @@ jobs:
           key: venv-${{ hashFiles('requirements.txt') }}
           path: .venv
 
+      - name: create base lambda layer
+        run: |
+          zip -r layer_content.zip .venv/lib
+
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4.0.3
         with:
           role-to-assume: arn:aws:iam::438465163921:role/GitHubActionsOIDCKieranManningDeployRole
           aws-region: eu-west-1
+
+      - name: upload lambda base layer
+        run: |
+          aws lambda publish-layer-version \
+            --layer-name IntercomNotifications-base-layer \
