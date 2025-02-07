@@ -2,13 +2,12 @@ on:
   push:
     branches: [ master, main ]
 
-permission:
+permissions:
   id-token: write
   contents: read
 
-
 jobs:
-  S3PackageUpload:
+  TestDeploy:
     runs-on: ubuntu-latest
     steps:
       - name: Git clone the repository
