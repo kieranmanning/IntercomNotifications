@@ -1,23 +1,6 @@
 def handler(event, context):
-    # token = event["authorizationToken"]
-    print(event)
     response = generatePolicy("user", "Deny", event["methodArn"])
     return response
-    # if token == "allow":
-    #     print("authorized")
-    #     response = generatePolicy("user", "Allow", event["methodArn"])
-    # elif token == "deny":
-    #     print("unauthorized")
-    #     response = generatePolicy("user", "Deny", event["methodArn"])
-    # elif token == "unauthorized":
-    #     print("unauthorized")
-    #     raise Exception("Unauthorized")  # Return a 401 Unauthorized response
-    #     return "unauthorized"
-    # try:
-    #     return json.loads(response)
-    # except BaseException:
-    #     print("unauthorized")
-    #     return "unauthorized"  # Return a 500 error
 
 
 def generatePolicy(principalId, effect, resource):

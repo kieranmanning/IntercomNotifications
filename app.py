@@ -6,6 +6,6 @@ from cdk.notifications_stack import NotificationsStack
 
 
 app = cdk.App()
-NotificationsStack(app, "LambdaCdkStack")
+NotificationsStack(app, "IntercomNotificationsStack")
 
 app.synth()
