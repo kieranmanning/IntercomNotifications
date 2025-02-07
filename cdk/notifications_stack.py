@@ -11,6 +11,7 @@ from aws_cdk import (
     Aws as AWS,
 )
 
+
 class NotificationsStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -82,14 +83,12 @@ class NotificationsStack(Stack):
             self,
             "NotificationsTable",
             partition_key=dynamodb.Attribute(
-                name="id",
-                type=dynamodb.AttributeType.STRING
+                name="id", type=dynamodb.AttributeType.STRING
             ),
             sort_key=dynamodb.Attribute(
-                name="timestamp",
-                type=dynamodb.AttributeType.STRING
+                name="timestamp", type=dynamodb.AttributeType.STRING
             ),
-            table_name="NoticationsTable"
+            table_name="NoticationsTable",
         )
         sqs_lambda.add_environment("TABLE_NAME", notification_table.table_name)
         notification_table.grant_write_data(sqs_lambda)

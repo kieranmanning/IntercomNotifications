@@ -2,6 +2,7 @@ import json
 import boto3
 import os
 
+
 def handler(event, context):
     event_data = json.loads(event)
 
@@ -12,9 +13,7 @@ def handler(event, context):
         raise e
 
     dynamodb = boto3.client("dynamodb")
-    dynamodb.put_item(
-        table_name=table_name,
-        item=event_data)
+    dynamodb.put_item(table_name=table_name, item=event_data)
 
     response = {"statusCode": 200, "body": "success"}
     return response
