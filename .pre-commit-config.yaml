@@ -5,8 +5,15 @@ repos:
   hooks:
     # Run the linter.
     - id: ruff
-      entry: poetry run ruff check
+      entry: ruff check
       args: [ --fix ]
 
     - id: ruff-format
-      entry: poetry run ruff format
+      entry: ruff format
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.11.0
+    hooks:
+      - id: commitlint
+        additional_dependencies: ['@commitlint/config-conventional']
+        stages: [commit-msg]
