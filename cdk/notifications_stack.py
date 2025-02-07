@@ -9,6 +9,7 @@ from aws_cdk import (
     aws_dynamodb as dynamodb,
     aws_apigateway as apigateway,
     Aws as AWS,
+    RemovalPolicy,
 )
 
 
@@ -86,9 +87,10 @@ class NotificationsStack(Stack):
                 name="id", type=dynamodb.AttributeType.STRING
             ),
             sort_key=dynamodb.Attribute(
-                name="timestamp", type=dynamodb.AttributeType.STRING
+                name="timestamp", type=dynamodb.AttributeType.NUMBER
             ),
             table_name="NoticationsTable",
+            removal_policy=RemovalPolicy.DESTROY,
         )
         sqs_lambda.add_environment("TABLE_NAME", notification_table.table_name)
         notification_table.grant_write_data(sqs_lambda)
