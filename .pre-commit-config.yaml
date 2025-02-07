@@ -1,5 +1,5 @@
 repos:
-- repo: https://github.com/astral-sh/ruff-pre-commit
+- repo: "https://github.com/astral-sh/ruff-pre-commit"
   # Ruff version.
   rev: v0.8.3
   hooks:
@@ -11,9 +11,9 @@ repos:
     - id: ruff-format
       entry: ruff format
 
-  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.11.0
-    hooks:
-      - id: commitlint
-        additional_dependencies: ['@commitlint/config-conventional']
-        stages: [commit-msg]
+- repo: "https://github.com/alessandrojcm/commitlint-pre-commit-hook"
+  rev: v9.11.0
+  hooks:
+    - id: commitlint
+      additional_dependencies: ['@commitlint/config-conventional']
+      stages: [commit-msg]
