@@ -50,3 +50,4 @@ jobs:
         run: |
           aws lambda publish-layer-version \
             --layer-name IntercomNotifications-base-layer \
+            --zip-file fileb://layer_content.zip
