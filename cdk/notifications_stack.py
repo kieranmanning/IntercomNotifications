@@ -20,7 +20,7 @@ class NotificationsStack(Stack):
         # Our queue for handling incoming notifications
         incoming_notification_queue = sqs.Queue(
             self,
-            "LambdaCdkQueue",
+            "NotificationQueue",
             visibility_timeout=Duration.seconds(300),
         )
 
@@ -68,7 +68,7 @@ class NotificationsStack(Stack):
 
         sqs_lambda = aws_lambda.Function(
             self,
-            "SQSLambda",
+            "NotificationHandler",
             handler="notification_handler.handler",
             runtime=aws_lambda.Runtime.PYTHON_3_13,
             code=aws_lambda.Code.from_asset("./cdk/lambda"),
@@ -114,12 +114,12 @@ class NotificationsStack(Stack):
         )
 
         api_gateway = apigateway.LambdaRestApi(
-            self, "HelloWorldApi", handler=sqs_lambda, proxy=False
+            self, "StatusApi", handler=sqs_lambda, proxy=False
         )
 
-        hello_resource = api_gateway.root.add_resource("hello")
+        hello_resource = api_gateway.root.add_resource("status")
         hello_resource.add_method(
-            "POST",
+            "GET",
             authorizer=api_gateway_authorizer,
             authorization_type=apigateway.AuthorizationType.CUSTOM,
         )
