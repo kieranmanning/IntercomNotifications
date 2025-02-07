@@ -1,0 +1,21 @@
+on:
+  push:
+    branches: [ master, main ]
+
+permission:
+  id-token: write
+  contents: read
+
+
+jobs:
+  S3PackageUpload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v4
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials
+        with:
+          role-to-assume: GitHubActionsOIDCKieranManningDeployRole
+          aws-region: eu-west-1

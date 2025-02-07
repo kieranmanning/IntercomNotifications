@@ -11,7 +11,6 @@ from aws_cdk import (
     Aws as AWS,
 )
 
-
 class NotificationsStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -69,7 +68,7 @@ class NotificationsStack(Stack):
             self,
             "SQSLambda",
             handler="notification_handler.handler",
-            runtime=aws_lambda.Runtime.PYTHON_3_10,
+            runtime=aws_lambda.Runtime.PYTHON_3_13,
             code=aws_lambda.Code.from_asset("./cdk/lambda"),
         )
 
@@ -103,7 +102,7 @@ class NotificationsStack(Stack):
             self,
             "Auth0AuthorizerLambda",
             handler="authorizer_handler.handler",
-            runtime=aws_lambda.Runtime.PYTHON_3_10,
+            runtime=aws_lambda.Runtime.PYTHON_3_13,
             code=aws_lambda.Code.from_asset("./cdk/lambda"),
         )
 
