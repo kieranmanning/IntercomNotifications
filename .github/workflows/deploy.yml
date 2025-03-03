@@ -43,7 +43,7 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4.0.3
         with:
-          role-to-assume: arn:aws:iam::438465163921:role/GitHubActionsOIDCKieranManningDeployRole
+          role-to-assume: arn:aws:iam::438465163921:role/GitHubActionsOIDCDeployRole
           aws-region: eu-west-1
 
       - name: upload lambda base layer
