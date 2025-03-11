@@ -8,6 +8,7 @@ from aws_cdk import (
     aws_lambda_event_sources as lambda_event_sources,
     aws_dynamodb as dynamodb,
     aws_apigateway as apigateway,
+    aws_cognito as cognito,
     Aws as AWS,
     RemovalPolicy,
 )
@@ -24,6 +25,20 @@ class NotificationsStack(Stack):
             visibility_timeout=Duration.seconds(300),
         )
 
+        global_user_pool = cognito.UserPool.from_user_pool_id(
+            self,
+            "GlobalUserPool",
+            user_pool_id="eu-west-1_xaqjPOYjC",
+        )
+
+        cognito_authorizer = apigateway.CognitoUserPoolsAuthorizer(
+            self,
+            "CognitoAuthorizer",
+            cognito_user_pools=[global_user_pool],
+            authorizer_name="CognitoAuthorizer",
+            identity_source="method.request.header.Authorization",
+        )
+
         api_gateway_role = iam.Role(
             self,
             "RestAPIRole",
@@ -32,9 +47,9 @@ class NotificationsStack(Stack):
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSQSFullAccess")
             ],
         )
-        api_gateway_base = apigateway.RestApi(self, "ApiGateway")
-        api_notifications_resource = api_gateway_base.root.add_resource("notifications")
+        notifications_api_gateway_base = apigateway.RestApi(self, "NotificationsApi")
 
+        # Create our SQS integration
         sqs_integration_response = apigateway.IntegrationResponse(
             status_code="200",
             response_templates={"application/json": ""},
@@ -61,15 +76,21 @@ class NotificationsStack(Stack):
 
         method_response = apigateway.MethodResponse(status_code="200")
 
-        # Add the API GW Integration to the "example" API GW Resource
+        api_notifications_resource = notifications_api_gateway_base.root.add_resource(
+            "notifications"
+        )
         api_notifications_resource.add_method(
-            "POST", api_notifications_sqs_integation, method_responses=[method_response]
+            "POST",
+            api_notifications_sqs_integation,
+            method_responses=[method_response],
+            authorizer=cognito_authorizer,
+            authorization_type=apigateway.AuthorizationType.COGNITO,
         )
 
-        sqs_lambda = aws_lambda.Function(
+        notification_create_handler = aws_lambda.Function(
             self,
             "NotificationHandler",
-            handler="notification_handler.handler",
+            handler="notification_update.handler",
             runtime=aws_lambda.Runtime.PYTHON_3_13,
             code=aws_lambda.Code.from_asset("./cdk/lambda"),
         )
@@ -78,7 +99,7 @@ class NotificationsStack(Stack):
             incoming_notification_queue
         )
 
-        sqs_lambda.add_event_source(sqs_event_source)
+        notification_create_handler.add_event_source(sqs_event_source)
 
         notification_table = dynamodb.Table(
             self,
@@ -89,37 +110,29 @@ class NotificationsStack(Stack):
             sort_key=dynamodb.Attribute(
                 name="timestamp", type=dynamodb.AttributeType.NUMBER
             ),
-            table_name="NoticationsTable",
+            table_name="NotificationsTable",
             removal_policy=RemovalPolicy.DESTROY,
         )
-        sqs_lambda.add_environment("TABLE_NAME", notification_table.table_name)
-        notification_table.grant_write_data(sqs_lambda)
+        notification_create_handler.add_environment(
+            "TABLE_NAME", notification_table.table_name
+        )
+        notification_table.grant_write_data(notification_create_handler)
 
-        #######################################################################
-        # Authorization code from here on
-        #######################################################################
-
-        authorizer_lambda = aws_lambda.Function(
+        notification_list_handler = aws_lambda.Function(
             self,
-            "Auth0AuthorizerLambda",
-            handler="authorizer_handler.handler",
+            "NotificationListHandler",
+            handler="notification_list.handler",
             runtime=aws_lambda.Runtime.PYTHON_3_13,
             code=aws_lambda.Code.from_asset("./cdk/lambda"),
         )
-
-        api_gateway_authorizer = apigateway.TokenAuthorizer(
-            self,
-            "Auth0ApiGatewayAuthorizer",
-            handler=authorizer_lambda,
+        notification_list_handler.add_environment(
+            "TABLE_NAME", notification_table.table_name
         )
+        notification_table.grant_read_data(notification_list_handler)
 
-        api_gateway = apigateway.LambdaRestApi(
-            self, "StatusApi", handler=sqs_lambda, proxy=False
-        )
-
-        hello_resource = api_gateway.root.add_resource("status")
-        hello_resource.add_method(
+        api_notifications_resource.add_method(
             "GET",
-            authorizer=api_gateway_authorizer,
-            authorization_type=apigateway.AuthorizationType.CUSTOM,
+            apigateway.LambdaIntegration(notification_list_handler),
+            authorizer=cognito_authorizer,
+            authorization_type=apigateway.AuthorizationType.COGNITO,
         )

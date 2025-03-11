@@ -9,6 +9,7 @@ def handler(event, context):
         print("dynamodb TABLE_NAME env var should be defined in stack")
         raise e
 
+    dynamodb = boto3.client("dynamodb")
     for record in event["Records"]:
         db_item = {
             "id": {"S": record["messageId"]},
@@ -16,7 +17,6 @@ def handler(event, context):
             "eventSourceARN": {"S": record["eventSourceARN"]},
             "eventBody": {"S": record["body"]},
         }
-        dynamodb = boto3.client("dynamodb")
         dynamodb.put_item(TableName=table_name, Item=db_item)
 
     response = {"statusCode": 200, "body": "success"}
